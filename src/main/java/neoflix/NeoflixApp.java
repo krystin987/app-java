@@ -2,6 +2,7 @@ package neoflix;
 
 import static spark.Spark.*;
 
+import java.util.*;
 import com.google.gson.Gson;
 import neoflix.routes.*;
 import org.neo4j.driver.*;
@@ -27,6 +28,12 @@ public class NeoflixApp {
             path("/account", new AccountRoutes(driver, gson));
             path("/people", new PeopleRoutes(driver, gson));
         });
-        System.out.printf("Started server at port %d%n", port);
+        exception(ValidationException.class, (exception, request, response) -> {
+            response.status(422);
+            var body = Map.of("message",exception.getMessage(), "details", exception.getDetails());
+            response.body(gson.toJson(body));
+            response.type("application/json");
+        });
+        System.out.printf("Server listening on http://localhost:%d/%n", port);
     }
 }
